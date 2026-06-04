@@ -1,6 +1,6 @@
 {
     "name": "musicplayer/media-library",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Query the Android device audio library (MediaStore) from NativePHP Mobile — ready-to-use track metadata, folders, albums, artists and artwork.",
     "namespace": "MediaLibrary",
     "keywords": ["audio", "music", "mediastore", "media", "metadata", "library"],
@@ -47,6 +47,18 @@
             "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.RequestPermission",
             "ios": "MediaLibraryFunctions.RequestPermission",
             "description": "Solicita ao usuário a permissão de leitura de áudio"
+        },
+        {
+            "name": "MediaLibrary.PickFolder",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.PickFolder",
+            "ios": "MediaLibraryFunctions.PickFolder",
+            "description": "Abre o seletor de pastas (SAF); resultado via evento folder:chosen"
+        },
+        {
+            "name": "MediaLibrary.ScanTree",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.ScanTree",
+            "ios": "MediaLibraryFunctions.ScanTree",
+            "description": "Enumera e lê o áudio dentro de uma pasta SAF (tree URI)"
         }
     ],
     "android": {
@@ -57,7 +69,7 @@
         ],
         "repositories": [],
         "dependencies": {
-            "implementation": []
+            "implementation": ["androidx.documentfile:documentfile:1.0.1"]
         },
         "activities": [],
         "services": [],

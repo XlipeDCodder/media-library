@@ -3,14 +3,65 @@ package com.musicplayer.plugins.media_library
 import android.Manifest
 import android.content.ContentUris
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.documentfile.provider.DocumentFile
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.nativephp.mobile.bridge.BridgeFunction
 import com.nativephp.mobile.bridge.BridgeResponse
+import com.nativephp.mobile.utils.NativeActionCoordinator
+import org.json.JSONObject
+
+/**
+ * Fragment invisível que abre o seletor de pastas do Android (SAF, ACTION_OPEN_DOCUMENT_TREE)
+ * e devolve a URI da árvore como evento `native-event` ("folder:chosen") para o webview.
+ * O launcher é registrado no inicializador do fragment (timing correto do ActivityResult).
+ */
+class MediaLibraryFolderPicker : Fragment() {
+    private val picker =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            val act = activity as? FragmentActivity ?: return@registerForActivityResult
+            if (uri == null) {
+                NativeActionCoordinator.dispatchEvent(act, "folder:cancelled", "{}")
+                return@registerForActivityResult
+            }
+            // Mantém o acesso à pasta entre reinícios do app.
+            try {
+                requireContext().contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {
+            }
+            val name = DocumentFile.fromTreeUri(requireContext(), uri)?.name
+                ?: uri.lastPathSegment ?: "Pasta"
+            val payload = JSONObject().apply {
+                put("uri", uri.toString())
+                put("name", name)
+            }
+            NativeActionCoordinator.dispatchEvent(act, "folder:chosen", payload.toString())
+        }
+
+    fun launch() = picker.launch(null)
+
+    companion object {
+        fun install(activity: FragmentActivity): MediaLibraryFolderPicker =
+            activity.supportFragmentManager.findFragmentByTag("MediaLibraryFolderPicker")
+                as? MediaLibraryFolderPicker
+                ?: MediaLibraryFolderPicker().also {
+                    activity.supportFragmentManager.beginTransaction()
+                        .add(it, "MediaLibraryFolderPicker")
+                        .commitNow()
+                }
+    }
+}
 
 /** Permissão de leitura de áudio adequada à versão do Android. */
 private fun audioPermission(): String =
@@ -127,6 +178,71 @@ object MediaLibraryFunctions {
             }
 
             return BridgeResponse.success(mapOf("tracks" to tracks, "count" to tracks.size))
+        }
+    }
+
+    /** Abre o seletor de pastas (SAF). O resultado volta como evento `folder:chosen`. */
+    class PickFolder(private val activity: FragmentActivity) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            activity.runOnUiThread {
+                MediaLibraryFolderPicker.install(activity).launch()
+            }
+            return BridgeResponse.success(mapOf("started" to true))
+        }
+    }
+
+    /** Enumera o áudio dentro de uma pasta SAF (tree URI) e lê os metadados. */
+    class ScanTree(private val context: Context) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val uriStr = parameters["uri"] as? String
+                ?: return BridgeResponse.success(mapOf("tracks" to emptyList<Any>(), "count" to 0))
+
+            val tracks = ArrayList<Map<String, Any>>()
+            val root = DocumentFile.fromTreeUri(context, Uri.parse(uriStr))
+            if (root != null) collect(root, tracks)
+
+            return BridgeResponse.success(mapOf("tracks" to tracks, "count" to tracks.size))
+        }
+
+        private fun collect(dir: DocumentFile, out: ArrayList<Map<String, Any>>) {
+            for (f in dir.listFiles()) {
+                if (f.isDirectory) {
+                    collect(f, out)
+                    continue
+                }
+                val name = f.name ?: continue
+                val mime = f.type ?: ""
+                val isAudio = mime.startsWith("audio") ||
+                    name.endsWith(".mp3", true) || name.endsWith(".flac", true) || name.endsWith(".m4a", true)
+                if (!isAudio) continue
+
+                out.add(readTrack(f, name, mime))
+            }
+        }
+
+        private fun readTrack(f: DocumentFile, name: String, mime: String): Map<String, Any> {
+            val r = MediaMetadataRetriever()
+            var title = ""; var artist = ""; var album = ""; var duration = 0L
+            try {
+                r.setDataSource(context, f.uri)
+                title = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE) ?: ""
+                artist = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST) ?: ""
+                album = r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM) ?: ""
+                duration = (r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L) / 1000
+            } catch (_: Exception) {
+            } finally {
+                try { r.release() } catch (_: Exception) {}
+            }
+            return mapOf(
+                "uri" to f.uri.toString(),
+                "path" to f.uri.toString(),
+                "title" to (if (title.isNotBlank()) title else name.substringBeforeLast('.')),
+                "artist" to artist,
+                "album" to album,
+                "duration" to duration,
+                "size" to f.length(),
+                "mime" to mime,
+            )
         }
     }
 

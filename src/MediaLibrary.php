@@ -48,6 +48,35 @@ class MediaLibrary
     }
 
     /**
+     * Abre o seletor de pastas do Android (SAF). É assíncrono: o resultado chega
+     * no frontend como o evento DOM `native-event` com event = "folder:chosen"
+     * e payload { uri, name } (ou "folder:cancelled").
+     */
+    public function pickFolder(): void
+    {
+        if (function_exists('nativephp_call')) {
+            nativephp_call('MediaLibrary.PickFolder', '{}');
+        }
+    }
+
+    /**
+     * Enumera e lê os metadados do áudio dentro de uma pasta SAF (tree URI).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function scanTree(string $treeUri): array
+    {
+        if (! function_exists('nativephp_call')) {
+            return [];
+        }
+
+        $result = nativephp_call('MediaLibrary.ScanTree', json_encode(['uri' => $treeUri]));
+        $decoded = $result ? json_decode($result, true) : [];
+
+        return $decoded['tracks'] ?? [];
+    }
+
+    /**
      * Verifica se o plugin nativo está carregado.
      */
     public function getStatus(): ?array

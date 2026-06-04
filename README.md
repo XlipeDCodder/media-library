@@ -125,6 +125,44 @@ $byFolder = collect(MediaLibrary::queryAudio())
 
 ---
 
+### Runtime permission
+
+```php
+use Musicplayer\MediaLibrary\Facades\MediaLibrary;
+
+if (! MediaLibrary::checkPermission()) {
+    MediaLibrary::requestPermission(); // shows the native permission dialog
+    // Ask the user to retry once granted.
+}
+```
+
+### Folder picker (Storage Access Framework)
+
+`pickFolder()` opens the native folder picker. It is **asynchronous**: the result is
+delivered to the frontend as a DOM `native-event`, and the access is persisted across
+app restarts (`takePersistableUriPermission`).
+
+```php
+MediaLibrary::pickFolder();
+```
+
+```js
+// Vue / JS — listen for the chosen folder
+document.addEventListener('native-event', (e) => {
+    if (e.detail.event === 'folder:chosen') {
+        const { uri, name } = e.detail.payload; // content tree URI + folder name
+        // e.g. POST it to your backend to persist + scan
+    }
+    // 'folder:cancelled' is emitted if the user backs out.
+});
+```
+
+Then read the audio inside the chosen tree (content URIs, via `MediaMetadataRetriever`):
+
+```php
+$tracks = MediaLibrary::scanTree($treeUri); // [{ uri, title, artist, album, duration, size, mime }, ...]
+```
+
 ## Building
 
 Native code changes are picked up when you (re)build the native project:
@@ -144,10 +182,14 @@ cd nativephp/android
 
 ## Bridge functions
 
-| Function                 | Params    | Returns                                  |
-|--------------------------|-----------|------------------------------------------|
-| `MediaLibrary.QueryAudio`| `context` | `{ tracks: [...], count: int }`          |
-| `MediaLibrary.GetStatus` | `context` | `{ status: "ready", provider: "MediaStore" }` |
+| Function                    | Params     | Returns                                       |
+|-----------------------------|------------|-----------------------------------------------|
+| `MediaLibrary.QueryAudio`   | `context`  | `{ tracks: [...], count: int }`               |
+| `MediaLibrary.CheckPermission` | `context` | `{ granted: bool }`                          |
+| `MediaLibrary.RequestPermission` | `activity` | `{ granted: bool, requested: bool }`     |
+| `MediaLibrary.PickFolder`   | `activity` | `{ started: true }` — result via `folder:chosen` event |
+| `MediaLibrary.ScanTree`     | `context`  | `{ tracks: [...], count: int }`               |
+| `MediaLibrary.GetStatus`    | `context`  | `{ status: "ready", provider: "MediaStore" }` |
 
 ---
 
