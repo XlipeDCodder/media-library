@@ -1,0 +1,88 @@
+{
+    "name": "musicplayer/media-library",
+    "version": "1.0.0",
+    "description": "Query the Android device audio library (MediaStore) from NativePHP Mobile — ready-to-use track metadata, folders, albums, artists and artwork.",
+    "namespace": "MediaLibrary",
+    "keywords": ["audio", "music", "mediastore", "media", "metadata", "library"],
+    "category": "media",
+    "license": "MIT",
+    "pricing": {
+        "type": "free"
+    },
+    "author": {
+        "name": "Felipe Almeida",
+        "email": "you@example.com",
+        "url": ""
+    },
+    "homepage": "",
+    "repository": "",
+    "funding": [],
+    "platforms": [
+        "android",
+        "ios"
+    ],
+    "icon": "resources/icon.png",
+    "screenshots": [],
+    "bridge_functions": [
+        {
+            "name": "MediaLibrary.QueryAudio",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.QueryAudio",
+            "ios": "MediaLibraryFunctions.QueryAudio",
+            "description": "Consulta as faixas de áudio do MediaStore com metadados"
+        },
+        {
+            "name": "MediaLibrary.GetStatus",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.GetStatus",
+            "ios": "MediaLibraryFunctions.GetStatus",
+            "description": "Verifica se o plugin está carregado"
+        },
+        {
+            "name": "MediaLibrary.CheckPermission",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.CheckPermission",
+            "ios": "MediaLibraryFunctions.CheckPermission",
+            "description": "Verifica se a permissão de leitura de áudio está concedida"
+        },
+        {
+            "name": "MediaLibrary.RequestPermission",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.RequestPermission",
+            "ios": "MediaLibraryFunctions.RequestPermission",
+            "description": "Solicita ao usuário a permissão de leitura de áudio"
+        }
+    ],
+    "android": {
+        "min_version": 21,
+        "permissions": [
+            "android.permission.READ_MEDIA_AUDIO",
+            "android.permission.READ_EXTERNAL_STORAGE"
+        ],
+        "repositories": [],
+        "dependencies": {
+            "implementation": []
+        },
+        "activities": [],
+        "services": [],
+        "receivers": [],
+        "providers": []
+    },
+    "ios": {
+        "min_version": "15.0",
+        "permissions": [],
+        "repositories": [],
+        "dependencies": {
+            "swift_packages": [],
+            "pods": []
+        }
+    },
+    "assets": {
+        "android": [],
+        "ios": []
+    },
+    "secrets": [],
+    "events": [
+        "Musicplayer\\MediaLibrary\\Events\\MediaLibraryCompleted"
+    ],
+    "service_provider": "Musicplayer\\MediaLibrary\\MediaLibraryServiceProvider",
+    "hooks": {
+        "copy_assets": "nativephp:media-library:copy-assets"
+    }
+}
