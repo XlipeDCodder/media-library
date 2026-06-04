@@ -2,7 +2,11 @@
     "name": "musicplayer/media-library",
     "description": "Query the Android device audio library (MediaStore) from NativePHP Mobile — ready-to-use track metadata, folders, albums, artists and artwork.",
     "keywords": ["nativephp", "android", "mediastore", "audio", "music", "media", "metadata"],
-    "homepage": "https://github.com/felipealmeida/nativephp-media-library",
+    "homepage": "https://github.com/XlipeDCodder/media-library",
+    "support": {
+        "issues": "https://github.com/XlipeDCodder/media-library/issues",
+        "source": "https://github.com/XlipeDCodder/media-library"
+    },
     "type": "nativephp-plugin",
     "license": "MIT",
     "authors": [

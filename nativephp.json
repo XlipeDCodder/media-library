@@ -14,8 +14,8 @@
         "email": "you@example.com",
         "url": ""
     },
-    "homepage": "",
-    "repository": "",
+    "homepage": "https://github.com/XlipeDCodder/media-library",
+    "repository": "https://github.com/XlipeDCodder/media-library",
     "funding": [],
     "platforms": [
         "android",
