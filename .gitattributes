@@ -1,0 +1,12 @@
+# Normaliza quebras de linha (LF) para todo o código-fonte do pacote.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.webp binary
+
+# Arquivos que não precisam ir em dist (export do Composer)
+/.github     export-ignore
+/tests       export-ignore
+/.gitattributes export-ignore
+/.gitignore     export-ignore
