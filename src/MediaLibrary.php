@@ -77,6 +77,23 @@ class MediaLibrary
     }
 
     /**
+     * Extrai a capa embutida de um arquivo de áudio (content:// ou caminho) e devolve
+     * os bytes binários (JPEG/PNG), ou null se não houver capa embutida.
+     */
+    public function getArtwork(string $uri): ?string
+    {
+        if (! function_exists('nativephp_call')) {
+            return null;
+        }
+
+        $result = nativephp_call('MediaLibrary.GetArtwork', json_encode(['uri' => $uri]));
+        $decoded = $result ? json_decode($result, true) : [];
+        $b64 = $decoded['art'] ?? '';
+
+        return $b64 !== '' ? base64_decode($b64) : null;
+    }
+
+    /**
      * Verifica se o plugin nativo está carregado.
      */
     public function getStatus(): ?array

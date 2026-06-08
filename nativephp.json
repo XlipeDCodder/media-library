@@ -59,6 +59,12 @@
             "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.ScanTree",
             "ios": "MediaLibraryFunctions.ScanTree",
             "description": "Enumera e lê o áudio dentro de uma pasta SAF (tree URI)"
+        },
+        {
+            "name": "MediaLibrary.GetArtwork",
+            "android": "com.musicplayer.plugins.media_library.MediaLibraryFunctions.GetArtwork",
+            "ios": "MediaLibraryFunctions.GetArtwork",
+            "description": "Extrai a capa embutida de um arquivo de áudio (base64)"
         }
     ],
     "android": {

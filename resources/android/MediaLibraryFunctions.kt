@@ -246,6 +246,36 @@ object MediaLibraryFunctions {
         }
     }
 
+    /**
+     * Extrai a capa EMBUTIDA de um arquivo de áudio (tag ID3/MP4) e devolve em base64.
+     * Funciona tanto para content:// (SAF/MediaStore) quanto para caminhos de arquivo.
+     * O MediaStore albumart nem sempre tem a capa, mas a tag embutida sim.
+     */
+    class GetArtwork(private val context: Context) : BridgeFunction {
+        override fun execute(parameters: Map<String, Any>): Map<String, Any> {
+            val src = parameters["uri"] as? String
+                ?: return BridgeResponse.success(mapOf("art" to ""))
+
+            val r = MediaMetadataRetriever()
+            return try {
+                if (src.startsWith("content://")) {
+                    r.setDataSource(context, Uri.parse(src))
+                } else {
+                    r.setDataSource(src)
+                }
+                val pic = r.embeddedPicture
+                val b64 = if (pic != null)
+                    android.util.Base64.encodeToString(pic, android.util.Base64.NO_WRAP)
+                else ""
+                BridgeResponse.success(mapOf("art" to b64))
+            } catch (e: Exception) {
+                BridgeResponse.success(mapOf("art" to ""))
+            } finally {
+                try { r.release() } catch (_: Exception) {}
+            }
+        }
+    }
+
     /** Sanidade: confirma que o plugin está carregado e responde. */
     class GetStatus(private val context: Context) : BridgeFunction {
         override fun execute(parameters: Map<String, Any>): Map<String, Any> {
